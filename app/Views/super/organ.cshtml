@@ -1,0 +1,144 @@
+﻿<div class="wln">
+    <div class="wln-title">
+        <span>
+            <input type="text" id="searchkey" onkeydown="ToSearch(event)" placeholder="按回车键进行查找" />
+        </span>
+        <strong>@Html.Raw(ViewBag.OrganPath)</strong>
+        <a onclick="Form('')"><i class="iconfont icon-plug"></i>新增</a>
+        <a href="batchimport">导入</a>
+        <a href="/system/select?to=@ViewBag.SelectTo&super=true" target="_top">切入</a>
+    </div>
+    <div class="line"></div>
+    <table id="dataTable" class="wln-table">
+        <tr>
+            <td style="width:58px; text-align:center;" field="Sort">排序</td>
+            <td style="width:98px; text-align:center;" field="Id">编码</td>
+            <td style="width:98px; text-align:center;" field="Name">名称</td>
+            <td style="width:auto; text-align:center;" field="">&nbsp;</td>
+            <td style="width:68px; text-align:center;" function="onSuper">管理员</td>
+            <td style="width:68px; text-align:center;" function="onChild">下级</td>
+            <td style="width:98px; text-align:center;" field="State">状态</td>
+            <td style="width:198px;" function="onAction">操作</td>
+        </tr>
+    </table>
+    <div class="wln-window" id="winForm">
+        <table class="wln-window-table">
+            <tr>
+                <td>名称：</td>
+                <td>
+                    <input type="text" id="Name" /><span class="tips notnull">区域（部门）名称</span>
+                </td>
+            </tr>
+            <tr>
+                <td>编码：</td>
+                <td>
+                    <input type="text" id="Id" /><span class="tips notnull">格式为：<font style="color:red">@Html.Raw(ViewBag.Parent.ToString().PadRight(Utility.AreaChildLength(ViewBag.Parent.ToString()), 'X'))</font></span>
+                </td>
+            </tr>
+            <tr>
+                <td>排序：</td>
+                <td>
+                    <input type="text" id="Sort" style="width:60px;text-align:center;" /><span class="tips">数值越小越靠前</span>
+                </td>
+            </tr>
+            <tr>
+                <td>状态：</td>
+                <td>
+                    <select id="State">
+                        <option value="1">启用</option>
+                        <option value="0" class="gray">停用</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+        <div class="wln-window-btns">
+            <a class="button green" onclick="Save();">确定</a>
+            <a class="button white" onclick="control.close()">关闭</a>
+        </div>
+    </div>
+</div>
+<script type="text/javascript">
+    sessionStorage.setItem('inline', '<li>系统</li><li>平台管理</li><li>平台用户管理</li>');
+    var table = control.datagrid('dataTable', location.pathname + '/pager?parent=@ViewBag.Parent', 10);
+    function ToSearch(e) {
+        if (e.keyCode == 13) {
+            table.pageIndex = 1;
+            table.load({ key: $('#searchkey').val() })
+        }
+    }
+    table.State = function (e) {
+        if (e.State == '正常') {
+            return '<font style="color:#7DB72F">' + e.State + '</font>';
+        } else {
+            return '<font style="color:#999999">' + e.State + '</font>';
+        }
+    }
+    table.onSuper = function (e) {
+        if (e.SuperId) {
+            return '<font style="color:green">有</font>';
+        } else {
+            return '<font style="color:#ccc">无</font>';
+        }
+    }
+    table.onChild = function (e) {
+        if (e.Child > 0) {
+            return '<font style="color:green">有</font>';
+        }
+        return '';
+    }
+    table.onAction = function (e) {
+        var str = '';
+        str += '<a href="organ?parent=' + e.Id + '">下级管理</a>';
+        str += '　<a href="/system/select?to=' + e.Id + '&super=true" target="_top">切入</a>';
+        str += '　<a onclick="Form(\'' + e.Id + '\')">编辑</a>';
+        str += '　<a onclick="Del(\'' + e.Id + '\')">删除</a>';
+        return str;
+    }
+    var oldId = '';
+    function Form(Id) {
+        oldId = '';
+        control.window('winForm', Id ? '编辑' : '新增', 520, 280, function () {
+            if (Id) {
+                $.getJSON(location.pathname + '/get?parent=@ViewBag.Parent', { Id: Id }, function (json) {
+                    if (json && json.Id) {
+                        oldId = json.Id;
+                        $('#Id').val(json.Id).attr('readonly', 'readonly').css('background', '#eeeeee');
+                        $('#Name').val(json.Name);
+                        $('#Sort').val(json.Sort);
+                        $('#State').val(json.State);
+                    }
+                });
+            }
+        });
+    }
+    function Save() {
+        $.getJSON(location.pathname + '/set?parent=@ViewBag.Parent', {
+            Id: $('#Id').val()
+            , OldId: oldId
+            , Name: $('#Name').val()
+            , Sort: $('#Sort').val()
+            , State: $('#State').val()
+        }, function (json) {
+            if (json.success) {
+                table.reload();
+                control.close();
+                setTimeout(function () {
+                    control.success(json.message);
+                }, 200)
+            } else {
+                control.error(json.message);
+            }
+        });
+    }
+    function Del(Id) {
+        control.confirm('确定要删除此记录吗?', '操作确认', function () {
+            $.getJSON(location.pathname + '/del?parent=@ViewBag.Parent', { Id: Id }, function (json) {
+                if (json.success) {
+                    table.reload();
+                } else {
+                    control.error(json.message);
+                }
+            });
+        });
+    }
+</script>

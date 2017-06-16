@@ -1,0 +1,50 @@
+﻿<style type="text/css">
+    .nav{display:table;width:100%;margin-bottom:6px;}
+    .nav > div{display:table-cell;width:20%;}
+	.nav-item{display:inline-block;width:150px;font-size:1.4rem;line-height:2rem;text-align:center;border-bottom:0.2rem solid #999999;color:#333333;text-align:center;}
+	.nav-item.active{border-bottom-color:#DC341D;background-color: #d0ebf5;}
+</style>
+<div class="wln">
+    <div class="nav">
+        <div>用户：@Html.Raw(ViewBag.CurrentUser)</div>
+        <div style="width:60%;text-align:center;">
+            <a href="rightcontent?userid=@ViewBag.UserId" class="nav-item">内容管理权限</a>
+            <a class="nav-item active">系统管理权限</a>
+            <a href="rightorgan?userid=@ViewBag.UserId" class="nav-item">部门及区域权限</a>
+        </div>
+        <div></div>
+    </div>
+    <table id="dataTable" class="datagrid">
+        <tr>
+            <td style="width:38px; text-align:center;" field="RowIndex">序号</td>
+            <td style="width:99px; text-align:center;" field="Name">名称</td>
+            <td style="width:auto; text-align:left;" field="Code">权限点</td>
+            <td style="width:58px; text-align:center;" function="onState">状态</td>
+            <td style="width:128px;" function="onAction">操作</td>
+        </tr>
+    </table>
+</div>
+
+<script type="text/javascript">
+    sessionStorage.setItem('inline', '<li>系统</li><li>用户管理</li><li>系统管理权限</li>');
+    var table = control.datagrid('dataTable', location.pathname + '/pager?userid=@ViewBag.UserId', {}, 100);
+    table.onState = function (e) {
+        if (e.State > 0) {
+            return '<a onclick="Set(\'' + e.Code + '\')" style="color:#7DB72F">已授权</a>';
+        } else {
+            return '<a onclick="Set(\'' + e.Code + '\')" style="color:#999999">未授权</a>';
+        }
+    }
+    table.onAction = function (e) {
+        return '<a onclick="Set(\'' + e.Code + '\')">授予</a>　<a onclick="Set(\'' + e.Code + '\')">取消</a>';
+    }
+    function Set(Code) {
+        $.getJSON(location.pathname + '/set', { userid: '@ViewBag.UserId', 'code': Code}, function (json) {
+            if (json.success) {
+                table.reload();
+            } else {
+                control.error(json.message);
+            }
+        });
+    }
+</script>

@@ -1,0 +1,237 @@
+﻿<script src="/jquery/uploader.min.js"></script>
+<div class="wln">
+    <div class="wln-title">
+        <span>
+            <input type="text" id="searchkey" onkeydown="ToSearch(event)" placeholder="按回车键进行查找" />
+        </span>
+        <strong>域名管理</strong><a onclick="Form('')"><i class="iconfont icon-plug"></i>新增</a>
+    </div>
+    <div class="line"></div>
+    <table id="dataTable" class="datagrid">
+        <tr>
+            <td style="width:68px; text-align:center;" field="RowIndex">序号</td>
+            <td style="width:128px; text-align:left;" field="Key">访问域名</td>
+            <td style="width:180px; text-align:center;" field="SystemName">系统名称</td>
+            <td style="width:60px; text-align:center;" function="LoginBg">登录背景</td>
+            <td style="width:60px; text-align:center;" function="LoginLogo">Logo</td>
+            <td style="width:60px; text-align:center;" function="AppLogo">AppLogo</td>
+            <td style="width:128px; text-align:center;" field="AppId">AppId</td>
+            <td style="width:auto; text-align:center;">&nbsp;</td>
+            <td style="width:180px;" function="onAction">操作</td>
+        </tr>
+    </table>
+    <div class="wln-window" id="domaininfo">
+        <table class="wln-window-table">
+            <tr>
+                <td>访问域名：</td>
+                <td>
+                    <input type="text" id="Key" style="width:180px;height:30px;" /><span class="tips notnull" id="tips">保存后不可修改</span>
+                </td>
+            </tr>
+            <tr>
+                <td>系统名称：</td>
+                <td>
+                    <input type="text" id="SystemName" style="width:180px;height:30px;" /><span class="tips"></span>
+                </td>
+            </tr>
+        </table>
+        <div class="wln-window-btns">
+            <a class="button green" onclick="Save();">确定</a>
+            <a class="button white" onclick="control.close()">关闭</a>
+        </div>
+    </div>
+    <div class="wln-window" id="UISet">
+        <table class="wln-window-table" id="System" style="display:none;">
+            <tr>
+                <td valign="top">登录背景：</td>
+                <td>
+                    <input type="hidden" name="LoginBg" id="LoginBg" />
+                </td>
+            </tr>
+            <tr>
+                <td valign="top">登录Logo：</td>
+                <td>
+                    <input type="hidden" name="LoginLogo" id="LoginLogo" />
+                </td>
+            </tr>
+        </table>
+        <table class="wln-window-table" id="App" style="display:none;">
+            <tr>
+                <td valign="top">Applogo：</td>
+                <td>
+                    <input type="hidden" name="Applogo" id="Applogo" />
+                </td>
+            </tr>
+            <tr>
+                <td valign="top">AppId：</td>
+                <td>
+                    <input type="text" name="AppId" id="AppId" style="width:230px;height:30px;" /><span class="tips notnull"></span>
+                </td>
+            </tr>
+        </table>
+        <div class="wln-window-btns">
+            <a class="button green" onclick="SaveUI();">确定</a>
+            <a class="button white" onclick="control.close()">关闭</a>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    sessionStorage.setItem('inline', '<li>系统</li><li>域名管理</li>');
+    var LoginLogo = null;
+    var LoginBg = null;
+    var Applogo = null;
+    var table = control.datagrid('dataTable', location.pathname + '?do=pager', 10);
+    function ToSearch(e) {
+        if (e.keyCode == 13) {
+            table.pageIndex = 1;
+            table.load({ key: $('#searchkey').val() })
+        }
+    }
+    table.LoginBg = function (e) {
+        if (e.LoginBg) {
+            return '<img src="' + e.LoginBg + '" style="height:33px;" />';
+        }
+        else {
+            return '<img src="/img/error.gif" style="height:33px;" />';
+        }
+    }
+    table.LoginLogo = function (e) {
+        if (e.LoginLogo) {
+            return '<img src="' + e.LoginLogo + '" style="height:33px;" />';
+        }
+        else {
+            return '<img src="/img/error.gif" style="height:33px;" />';
+        }
+    }
+    table.AppLogo = function (e) {
+        if (e.AppLogo) {
+            return '<img src="' + e.AppLogo + '" style="height:32px;width:32px;" />';
+        }
+        else {
+            return '<img src="/img/error.gif" style="height:33px;" />';
+        }
+    }
+    table.onAction = function (e) {
+        var str = '';
+        str += '<a onclick="Form(\'' + e.Key + '\')">编辑</a>';
+        str += '&nbsp;<a onclick="UiSet(\'' + e.Key + '\',\'system\')">系统UI</a>';
+        str += '&nbsp;&nbsp;<a onclick="UiSet(\'' + e.Key + '\',\'app\')">APPUI</a>';
+        str += '&nbsp;<a onclick="Del(\'' + e.Key + '\')">删除</a>';
+        return str;
+    }
+    var thisId = '';
+    var _type = '';
+    function Form(Id) {
+        thisId = '';
+        control.window('domaininfo', Id ? '编辑' : '新增', 480, 180,
+            function () {
+                if (Id) {
+                    $("#tips").hide();
+                    $("#Key").attr("disabled", "disabled");
+                    $.getJSON(location.pathname + '?do=get', { key: Id }, function (json) {
+                        if (json && json.Key) {
+                            thisId = json.Key;
+                            $("#Key").val(json.Key);
+                            $("#SystemName").val(json.SyatemName);
+                        }
+                        else {
+                            control.error(json.message);
+                        }
+                    });
+                } else {
+                    $("#tips").show();
+                }
+            },
+            function () {
+                //关闭时回调
+            });
+    }
+    function UiSet(key, type) {
+        thisId = '';
+        _type = '';
+        control.window('UISet', (type=='system') ? '系统UI' : 'AppUI', 480, 310,
+            function () {
+                if (type == 'app') {
+                    $("#System").hide();
+                    $("#App").show();
+                    Applogo = createUpload('Applogo', function () { }, '/rest/upload');
+                }
+                if (type == 'system') {
+                    $("#System").show();
+                    $("#App").hide();
+                    LoginLogo = createUpload('LoginLogo', function () { }, '/rest/upload');
+                    LoginBg = createUpload('LoginBg', function () { }, '/rest/upload');
+                }
+                if (key) {
+                    $.getJSON(location.pathname + '?do=get', { key: key }, function (json) {
+                        if (json && json.Key) {
+                            thisId = json.Key;
+                            _type = type;
+                            if (type == 'app') {
+                                Applogo.load(json.AppLogo);
+                                $("#AppId").val(json.AppId);
+                            }
+                            else if (type == 'system') {
+                                LoginBg.load(json.LoginBg);
+                                LoginLogo.load(json.LoginLogo);
+                            }
+                        }
+                        else {
+                            control.error(json.message);
+                        }
+                    });
+                } else {
+
+                }
+            },
+            function () {
+                //关闭时回调
+            });
+    }
+    function SaveUI() {
+        $.getJSON(location.pathname + '?do=setui', {
+            okey: thisId
+            , type: _type
+             , loginbg: $("#LoginBg").val()
+            , loginlogo: $("#LoginLogo").val()
+            , applogn: $("#Applogo").val()
+            , appid: $("#AppId").val()
+        }, function (json) {
+            if (json.success) {
+                control.close();
+                table.reload();
+                control.success(json.message, false);
+            } else {
+                control.error(json.message);
+            }
+        });
+    }
+    function Save() {
+        $.getJSON(location.pathname + '?do=set', {
+            okey: thisId
+            , key: $("#Key").val()
+            , systemname: $("#SystemName").val()
+        }, function (json) {
+            if (json.success) {
+                control.close();
+                table.reload();
+                control.success(json.message, false);
+            } else {
+                control.error(json.message);
+            }
+        });
+    }
+    function Del(key) {
+        control.confirm('一旦删除将不可恢复，确定要删除吗?', '操作确认', function () {
+            $.getJSON(location.pathname + '?do=del', { okey: key }, function (json) {
+                if (json.success) {
+                    table.reload();
+                    control.success(json.message, false);
+                } else {
+                    control.error(json.message);
+                }
+            });
+        });
+    }
+</script>

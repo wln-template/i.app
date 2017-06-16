@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <title>Wlniao.i</title>
+    <link href="/css/style.css" rel="stylesheet" />
+    <script type="text/javascript" src="/tips/tips.js"></script>
+    <script type="text/javascript" src="/vue/vue.js"></script>
+    <script type="text/javascript" src="/vue/vue-ext.js"></script>
+    <script type="text/javascript" src="/vue/vue-router.js"></script>
+    <script type="text/javascript" src="@ViewBag.Assets/jquery/2.1.1/jquery.min.js"></script>
+    <script type="text/javascript" src="//at.alicdn.com/t/font_thaqz5e3uxjvpldi.js"></script>
+</head>
+<body>
+    <div id="app">
+        <div id="left">
+            <div class="logo"><img src="https://dashboard.daocloud.io/assets/images/logo_dcs.svg" style="width:168px;" /></div>
+            <div class="menu">
+                <div class="menu-group">
+                    <h2 class="menu-title">缴费</h2>
+                    <a class="menu-item active" href="/charge">
+                        <svg class="icon" aria-hidden="true"><use xlink:href="#icon-home"></use></svg>
+                        <span class="text">项目</span>
+                    </a>
+                    <a class="menu-item" href="/build-flows">
+                        <svg class="icon" aria-hidden="true"><use xlink:href="#icon-star"></use></svg>
+                        <span class="text">项目</span>
+                    </a>
+                </div>
+                <div class="menu-group">
+                    <h2 class="menu-title">系统管理</h2>
+                    <router-link class="menu-item" to="/system/basedata">
+                        <svg class="icon" aria-hidden="true"><use xlink:href="#icon-data"></use></svg>
+                        <span class="text">基础数据</span>
+                    </router-link>
+                    <a class="menu-item" href="/system/organ">
+                        <svg class="icon" aria-hidden="true"><use xlink:href="#icon-organ"></use></svg>
+                        <span class="text">组织机构</span>
+                    </a>
+                    <a class="menu-item" href="/system/user">
+                        <svg class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg>
+                        <span class="text">用户管理</span>
+                    </a>
+                </div>
+                <div class="menu-group">
+                    <h2 class="menu-title">用户</h2>
+                    <router-link class="menu-item" to="/xcenter/profile">
+                        <svg class="icon" aria-hidden="true"><use xlink:href="#icon-setting"></use></svg>
+                        <span class="text">个人设置</span>
+                    </router-link>
+                    <a class="menu-item" v-html onclick="app.logout()">
+                        <svg class="icon" aria-hidden="true"><use xlink:href="#icon-logout"></use></svg>
+                        <span class="text">退出登录</span>
+                    </a>
+                </div>
+            </div>
+            <div style="width:180px;bottom:5px;text-align:center;font-size:12px;color:Gray;position:absolute;">Powered by Wlniao</div>
+        </div>
+        <div id="center">
+            <ul class="topbar clearfix">
+                <li><a onclick="homeFrame();" title="返回我的主页" style="width:98px;">回到首页</a></li>
+                <li><a onclick="reloadFrame();" title="刷新">刷新</a></li>
+            </ul>
+            <div class="content clearfix">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+    <div id="right">
+        <div id="noticeToggle"><div onclick="$('#noticeControl').toggle()" style="height:50px;width:6px;background:#FFBDBD;font-size:0px;cursor:pointer;">&nbsp;</div></div>
+        <div id="noticeControl">
+            <div style="padding:168px 0px;text-align:center;color:#999999;font-size:12px;font-family:微软雅黑;">待办事项</div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        if (navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion.split(";")[1].replace(/[ ]/g, "") == "MSIE6.0" || navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion.split(";")[1].replace(/[ ]/g, "") == "MSIE7.0" || navigator.appName == "Microsoft Internet Explorer" && navigator.appVersion.split(";")[1].replace(/[ ]/g, "") == "MSIE8.0") {
+            alert("Your browser version is too low, please use IE9 and above or Chrome, Firefox and other browsers!");
+        }
+        var data = {};
+        var router = new VueRouter({
+            mode: 'history',
+            routes: []
+        });
+        var app = new Vue({
+            el: '#app', data: data, router: router, created() {
+                this.checkLogin();
+            }, methods: {
+                checkLogin() {
+                    if (this.$router.currentRoute.path == '/login' && this.getCookie('sid')) {
+                        this.$router.replace('/');
+                        location.reload();
+                    } else if (this.$router.currentRoute.path != '/login' && !this.getCookie('sid')) {
+                        this.$router.replace('/login');
+                        location.reload();
+                    }
+                },
+                logout() {
+                    this.delCookie('sid');
+                    this.checkLogin();
+                }
+            }
+        })
+        router.beforeEach((to, from, next) => {
+            next();
+            if (to.path != from.path) {
+                var inRouter = false;
+                for (var i = 0; i < router.options.routes.length; i++) {
+                    if (to.path == router.options.routes[i].path) {
+                        inRouter = true;
+                        break;
+                    }
+                }
+                if (!inRouter) {
+                    location.href = to.path;
+                }
+            }
+        })
+        function showTips(msg, icon, url) {
+            var _icon = 1;
+            if (icon) {
+                _icon = icon;
+            }
+            ZENG.msgbox.show('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + msg + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', _icon, 1800);
+            if (url) {
+                setTimeout(showMainFrame(url), 100);
+            }
+        }
+
+        var d = null;;
+        function showDialog(title, url, width, height) {
+            if (d != null) {
+                d.close().remove();
+                d = null;
+            }
+            if (!title) {
+                title = '提示';
+            }
+            if (!width || width < 300) {
+                width = 300;
+            }
+            if (!height || height < 60) {
+                height = 120;
+            }
+            d = dialog({
+                title: title,
+                width: width,
+                height: height,
+                content: '<iframe src="' + url + '" name="test-dialog" width="100%" height="100%" allowtransparency="yes" frameborder="no" scrolling="no"></iframe>'
+            }).showModal();
+        }
+        function dialogTips(msg) {
+            d = dialog({ content: '<div style="padding:20px">' + msg + '</div>' }).showModal();
+            setTimeout(function () {
+                d.close().remove();
+            }, 1500);
+        }
+        function closeDialog() {
+            if (d != null) {
+                d.close().remove();
+                d = null;
+            }
+        }
+    </script>
+</body>
+</html>

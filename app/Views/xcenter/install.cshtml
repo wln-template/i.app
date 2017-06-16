@@ -1,0 +1,67 @@
+﻿@{
+    Layout = null;
+}<!DOCTYPE html>
+<html>
+<head>
+    <title>应用安装</title>
+    <meta charset="utf-8" />
+    <style>
+        body {background-color: #f9f9f9;}
+        #go {width:96px;height:96px;line-height:96px;display:inline-block;border-radius:100px;background:#00adee;color:#ffffff;font-size:32px;}
+        #go:hover{background-color:#048ec1;}
+    </style>
+</head>
+<body>
+    <div class="wln" style="padding-top:15%;">
+        <div style="text-align:center;">
+            @if (string.IsNullOrEmpty(ViewBag.SuccessMessage))
+            {
+                <span>
+                    <input type="text" id="ihost" onkeydown="ToCheck(event)" style="width:360px;height:48px;border-radius:3px;padding-left:1rem;font-size:18px;" placeholder="请输入Wlniao.i服务器地址" />
+                </span>
+                <div style="margin-top:20px;">
+                    <a id="go" onclick="Check()">注册</a>
+                </div>
+            }
+            else
+            {
+                <span>@Html.Raw(ViewBag.SuccessMessage)</span>
+            }
+        </div>
+    </div>
+    <script type="text/javascript">
+        var eHost = document.getElementById('ihost');
+        function ToCheck(e) {
+            if (e.keyCode == 13) {
+                Check();
+            }
+        }
+        function Check() {
+            if (!eHost.value) {
+                alert("请输入Wlniao.i服务器地址");
+                eHost.focus();
+                return false;
+            }
+            var XMLHttp = null;
+            if (window.XMLHttpRequest) {
+                XMLHttp = new XMLHttpRequest();
+            } else if (window.ActiveXObject) {
+                XMLHttp = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+            XMLHttp.onreadystatechange = function () {
+                if (XMLHttp.readyState == 4 && XMLHttp.status) {
+                    var json = eval("(" + XMLHttp.responseText + ")");
+                    if (json.success) {
+                        window.location.href = '/enroll?ihost=' + json.data;
+                    } else {
+                        alert(json.message);
+                        eHost.focus();
+                    }
+                }
+            }
+            XMLHttp.open('GET', '/install?do=check&ihost=' + eHost.value, true);
+            XMLHttp.send();
+        }
+    </script>
+</body>
+</html>

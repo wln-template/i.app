@@ -1,0 +1,81 @@
+﻿<body class="wln" style="background-color:#f0f0f0;">
+    <style>
+        #content p {
+            font-size: 1.6rem;
+            text-indent: 2.7rem;
+        }
+        #content img {
+            width:100%;
+        }
+    </style>
+    <div style="margin:0px auto;display:table;">
+        <div style="display:table-cell;width:640px;background-color:#fcfcfc;">
+            <div style="padding:5px;">
+                <div style="text-align:center;padding:5px;line-height: 25px;">
+                    <span style="font-size: 18px;"><b>@Html.Raw(ViewBag.Title)</b></span><br />
+                    @if (!string.IsNullOrEmpty(ViewBag.Summary))
+                    {
+                        <div style="font-size:0.8em;">@Html.Raw(ViewBag.Summary)</div>
+                    }
+                    <span style="font-size: 14px;">所属栏目：<b>@Html.Raw(ViewBag.ColumnName)</b></span>
+                    <span style="font-size: 14px;">发布时间：<b>@Html.Raw(ViewBag.PublishTime)</b></span>
+                    @*<span style="float:right">发布时间：<b>@Html.Raw(ViewBag.PublishTime)</b></span>
+                    <span>@Html.Raw(ViewBag.Title)</span>
+                    <span style="float:left;">所属栏目：<b>@Html.Raw(ViewBag.ColumnName)</b></span>*@
+                </div>
+               
+                <div id="content">@Html.Raw(ViewBag.ContentText)</div>
+                @if (!string.IsNullOrEmpty(ViewBag.FileList)){
+                <div>
+                    <input type="hidden" name="FileList" id="FileList" />
+                </div>}
+            </div>
+        </div>
+        <div style="display:table-cell;width:150px;text-align:center;">
+            @if (!string.IsNullOrEmpty(ViewBag.ImageUrl))
+            {
+                <div style="text-align:center;">
+                    <img src="@Html.Raw(ViewBag.ImageUrl)" style="max-width:140px;margin:3px auto;" />
+                    <div style="display:block;text-align:center;">封面图</div>
+                </div>
+            }
+            @if (ViewBag.Right_Verify)
+            {
+                <div>
+                    <input type="button" value="审核" onclick="Verify()" class="button green" style="border-radius:1px;" />
+                    <input type="button" value="驳回" onclick="Return()" class="button gray" style="border-radius:1px;" />
+                </div>}
+        </div>
+    </div>
+    <script type="text/javascript">
+        document.title = '内容预览';
+        var uplist = createUplist('FileList', function () { }, '/rest/upload', true);
+        uplist.load('@ViewBag.FileList', true);
+        function Verify() {
+            control.confirm('确定要审核此内容吗?', '操作确认', function () {
+                $.getJSON('content?do=verify', { Id: '@ViewBag.Id' }, function (json) {
+                    if (json.success) {
+                        $(".green").hide();
+                        $(".gray").show();
+                        control.success(json.message, false);
+                    } else {
+                        control.error(json.message);
+                    }
+                });
+            });
+        }
+        function Return() {
+            control.confirm('确定要驳回此内容吗?', '操作确认', function () {
+                $.getJSON('content?do=return', { Id: '@ViewBag.Id' }, function (json) {
+                    if (json.success) {
+                        $(".green").show();
+                        $(".gray").hide();
+                        control.success(json.message, false);
+                    } else {
+                        control.error(json.message);
+                    }
+                });
+            });
+        }
+    </script>
+</body>

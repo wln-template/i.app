@@ -1,0 +1,154 @@
+﻿<body class="wln">
+    <style type="text/css">
+        .sort {
+            width: 40px;
+            text-align: center;
+        }
+    </style>
+    <div class="wln-title">
+        <strong>@Html.Raw(ViewBag.ColumnName)</strong>
+        @if (ViewBag.Right_Editer)
+        {
+            <a href="textrowForm?code=@ViewBag.ColumnCode"><i class="iconfont icon-plug"></i>新增内容</a>
+            <a onclick="SaveSort()">保存排序</a>
+        }
+    </div>
+    <div class="line"></div>
+    <table id="dataTable" class="datagrid">
+        <tr>
+            <td style="width:58px; text-align:center;" function="Weight">权重</td>
+            <td style="width:258px;text-align:left;" field="Title">内容标题</td>
+            <td style="width:68px; text-align:center;" field="PublishUser">发布人</td>
+            <td style="width:68px; text-align:center;" field="VerifyUser">审核人</td>
+            <td style="width:58px; text-align:center;" function="Status">状态</td>
+            <td style="width:128px;" function="onAction">操作</td>
+        </tr>
+    </table>
+</body>
+<script type="text/javascript">
+    var table = control.datagrid('dataTable', 'content?do=list&code=@ViewBag.ColumnCode', 100);
+    table.Weight = function (e) {
+        return '<input class="sort" id="' + e.Id + '" value="' + e.Weight + '" />';
+    }
+    table.Status = function (e) {
+        if (e.Status == '驳回') {
+            return '<font style="color:#FF0000">' + e.Status + '</font>';
+        } else if (e.Status == '已审') {
+            return '<font style="color:#7DB72F">' + e.Status + '</font>';
+        } else {
+            return '<font style="color:#999999">' + e.Status + '</font>';
+        }
+    }
+    function SaveSort() {
+        var ids = '';
+        $('.sort').each(function (i, obj) {
+            ids += $(this).attr('id') + '$' + $(this).val() + '|';
+        });
+        $.getJSON('content?do=weight&code=@ViewBag.ColumnCode', { ids: ids }, function (json) {
+            if (json.success) {
+                table.reload();
+                control.success(json.message);
+            } else {
+                control.error(json.message);
+            }
+        });
+    }
+    table.onAction = function (e) {
+        var str = '';
+        if (e.Status == '编辑中' || e.Status == '驳回') {
+            @if (ViewBag.Right_Editer)
+            {<text>
+            str += '<a href="preview?Id=' + e.Id + '" target="_blank">预览</a>&nbsp;';
+            str += '<a onclick="SendTo(\'' + e.Id + '\')">送审</a>&nbsp;';
+            str += '<a href="articleForm?code=@ViewBag.ColumnCode&Id=' + e.Id + '">编辑</a>&nbsp;';
+            str += '<a onclick="Delete(\'' + e.Id + '\')">删除</a>&nbsp;';
+            </text>}
+        } else if (e.Status == '送审') {
+            @if (ViewBag.Right_Editer)
+            {<text>
+            str += '<a onclick="Recall(\'' + e.Id + '\')">撤回</a>&nbsp;';
+            </text>}
+            str += '<a href="preview?Id=' + e.Id + '" target="_blank">预览</a>&nbsp;';
+            @if (ViewBag.Right_Verify)
+            {<text>
+            str += '<a onclick="Return(\'' + e.Id + '\')">驳回</a>&nbsp;';
+            str += '<a onclick="Verify(\'' + e.Id + '\')">审核</a>&nbsp;';
+            </text>}
+        } else {
+            str += '<a href="preview?Id=' + e.Id + '" target="_blank">查看</a>&nbsp;';
+            @if (ViewBag.Right_Editer)
+            {<text>
+            str += '<a onclick="Recall(\'' + e.Id + '\')">撤回</a>&nbsp;';
+                </text>}
+            @if (ViewBag.Right_Verify)
+            {<text>
+            str += '<a onclick="Return(\'' + e.Id + '\')">驳回</a>&nbsp;';
+                </text>}
+            @if (ViewBag.Right_Delete)
+            {<text>
+            str += '<a onclick="Delete(\'' + e.Id + '\')">删除</a>&nbsp;';
+                </text>}
+        }
+        return str;
+    }
+    function SendTo(Id) {
+        control.confirm('确定要送审此内容吗?', '操作确认', function () {
+            $.getJSON('content?do=sendto', { Id: Id,code:'@ViewBag.ColumnCode' }, function (json) {
+                if (json.success) {
+                    table.reload();
+                    control.success(json.message);
+                } else {
+                    control.error(json.message);
+                }
+            });
+        });
+    }
+    function Recall(Id) {
+        control.confirm('确定要撤回此内容吗?', '操作确认', function () {
+            $.getJSON('content?do=recall', { Id: Id }, function (json) {
+                if (json.success) {
+                    table.reload();
+                    control.success(json.message);
+                } else {
+                    control.error(json.message);
+                }
+            });
+        });
+    }
+    function Return(Id) {
+        control.confirm('确定要驳回此内容吗?', '操作确认', function () {
+            $.getJSON('content?do=return', { Id: Id }, function (json) {
+                if (json.success) {
+                    table.reload();
+                    control.success(json.message);
+                } else {
+                    control.error(json.message);
+                }
+            });
+        });
+    }
+    function Verify(Id) {
+        control.confirm('确定要审核此内容吗?', '操作确认', function () {
+            $.getJSON('content?do=verify', { Id: Id }, function (json) {
+                if (json.success) {
+                    table.reload();
+                    control.success(json.message);
+                } else {
+                    control.error(json.message);
+                }
+            });
+        });
+    }
+    function Delete(Id) {
+        control.confirm('确定要删除此内容吗?', '操作确认', function () {
+            $.getJSON('content?do=delete', { Id: Id }, function (json) {
+                if (json.success) {
+                    table.reload();
+                    control.success(json.message);
+                } else {
+                    control.error(json.message);
+                }
+            });
+        });
+    }
+</script>

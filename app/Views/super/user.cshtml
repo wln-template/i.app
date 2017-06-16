@@ -1,0 +1,57 @@
+﻿<div class="wln">
+    <div class="wln-title">
+        <span>
+            <input type="text" id="searchkey" onkeydown="ToSearch(event)" placeholder="按回车键进行查找" />
+        </span>
+        <strong>普通用户列表</strong>
+    </div>
+    <div class="line"></div>
+    <table id="dataTable" class="datagrid">
+        <tr>
+            <td style="width:38px; text-align:center;" field="RowIndex">序号</td>
+            <td style="width:68px; text-align:center;" field="Username">用户名</td>
+            <td style="width:88px; text-align:center;" field="TrueName">姓名</td>
+            <td style="width:108px; text-align:center;" field="CreateTime" class="datagrid-orderby">添加时间</td>
+            <td style="width:128px; text-align:center;" field="LastLogin" class="datagrid-orderby">最近登录时间</td>          
+            <td style="width:98px;" function="onAction">操作</td>
+        </tr>
+    </table>
+</div>
+
+<script type="text/javascript">
+    sessionStorage.setItem('inline', '<li>系统</li><li>普通用户列表</li>');
+    var table = control.datagrid('dataTable', location.pathname + '?do=list', 10);
+    function ToSearch(e) {
+        if (e.keyCode == 13) {
+            table.pageIndex = 1;
+            table.load({ key: $('#searchkey').val() })
+        }
+    }
+    table.onAction = function (e) {
+        var str = '<a onclick="RePwd(\'' + e.Id + '\')">重置密码</a>　<a onclick="Del(\'' + e.Id + '\')">删除</a>';
+        return str;
+    }
+    function Del(Id) {
+        control.confirm('用户一旦删除将不可恢复，确定要删除吗?', '操作确认', function () {
+            $.getJSON(location.pathname + '?do=del', { Id: Id }, function (json) {
+                if (json.success) {
+                    table.reload();
+                    control.success(json.message);
+                } else {
+                    control.error(json.message);
+                }
+            });
+        });
+    }
+    function RePwd(Id) {
+        control.confirm('确定要将用户密码重置为默认密码（@ViewBag.DefaultPwd）吗?', '操作确认', function () {
+            $.getJSON(location.pathname + '?do=repwd', { Id: Id }, function (json) {
+                if (json.success) {
+                    control.success(json.message);
+                } else {
+                    control.error(json.message);
+                }
+            });
+        });
+    }
+</script>
