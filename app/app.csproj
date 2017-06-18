@@ -47,12 +47,16 @@
     <PackageReference Include="System.Linq.Expressions" Version="4.3.0" />
     <PackageReference Include="Pomelo.Data.MySql" Version="1.0.0" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="1.1.2" />
-    <PackageReference Include="wlniao.i" Version="1.0.0-beta-70617" />
+    <PackageReference Include="wlniao.i" Version="1.0.0-beta-70618" />
     <PackageReference Include="Wlniao.XCore" Version="1.7.8" />
   </ItemGroup>
 
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.EntityFrameworkCore.Tools.DotNet" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\app\" />
   </ItemGroup>
 
 </Project>
